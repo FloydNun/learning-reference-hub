@@ -1,0 +1,581 @@
+# Universal Data Viewer - See Your Data
+
+## All-in-One Data Viewer
+
+```html name=universal-data-viewer.html
+<! DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Data Viewer</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background:  #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align:  center;
+        }
+
+        . upload-area {
+            background: white;
+            padding: 40px;
+            border-radius:  10px;
+            text-align: center;
+            border: 3px dashed #ccc;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f9f9ff;
+        }
+
+        .upload-area. drag-over {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .format-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .format-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius:  5px;
+            cursor:  pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        . format-btn:hover, .format-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .viewer-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .raw-data {
+            background: #f8f9fa;
+            padding:  15px;
+            border-radius: 5px;
+            max-height: 500px;
+            overflow:  auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .parsed-data {
+            max-height: 500px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align:  left;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        . tree-view {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .tree-item {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        . tree-key {
+            color: #667eea;
+            font-weight:  bold;
+        }
+
+        . tree-value {
+            color:  #333;
+        }
+
+        .tree-type {
+            color: #999;
+            font-size: 11px;
+        }
+
+        . stats {
+            background: #f0f0ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        . stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        . stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight:  bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            color: #c00;
+            padding: 20px;
+            border-radius:  5px;
+            margin:  20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .viewer-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Universal Data Viewer</h1>
+            <p>View JSON, YAML, XML, CSV, and more</p>
+        </header>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <h2>📁 Drop your file here or click to browse</h2>
+            <p>Supports:  . json, .yaml, .yml, .xml, .csv, . txt</p>
+            <input type="file" id="fileInput" accept=".json,. yaml,.yml,.xml,.csv,. txt">
+        </div>
+
+        <!-- Format Selector -->
+        <div class="format-selector">
+            <button class="format-btn" onclick="parseAs('json')">JSON</button>
+            <button class="format-btn" onclick="parseAs('yaml')">YAML</button>
+            <button class="format-btn" onclick="parseAs('xml')">XML</button>
+            <button class="format-btn" onclick="parseAs('csv')">CSV</button>
+            <button class="format-btn" onclick="parseAs('text')">Plain Text</button>
+        </div>
+
+        <!-- Viewer -->
+        <div class="viewer-container">
+            <!-- Raw Data Panel -->
+            <div class="panel">
+                <h2>📄 Raw Data</h2>
+                <div class="raw-data" id="rawData">
+                    Upload a file to view its contents... 
+                </div>
+                
+                <div class="stats" id="stats" style="display: none;">
+                    <strong>📊 File Stats</strong>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="fileSize">-</div>
+                            <div class="stat-label">Size</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="lineCount">-</div>
+                            <div class="stat-label">Lines</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="charCount">-</div>
+                            <div class="stat-label">Characters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parsed Data Panel -->
+            <div class="panel">
+                <h2>🎯 Parsed Data</h2>
+                <div class="parsed-data" id="parsedData">
+                    Parsed data will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let currentFormat = null;
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        // Drag and drop
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e. preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList. remove('drag-over');
+            const files = e.dataTransfer. files;
+            if (files.length > 0) {
+                handleFile({ target: { files } });
+            }
+        });
+
+        // Handle file
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (! file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentData = e.target.result;
+                
+                // Auto-detect format
+                const ext = file.name.split('.').pop().toLowerCase();
+                let format = 'text';
+                if (ext === 'json') format = 'json';
+                else if (ext === 'yaml' || ext === 'yml') format = 'yaml';
+                else if (ext === 'xml') format = 'xml';
+                else if (ext === 'csv') format = 'csv';
+
+                displayRawData(currentData, file);
+                parseAs(format);
+            };
+            reader.readAsText(file);
+        }
+
+        // Display raw data
+        function displayRawData(data, file) {
+            document.getElementById('rawData').textContent = data;
+            
+            // Show stats
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('fileSize').textContent = formatBytes(file.size);
+            document.getElementById('lineCount').textContent = data.split('\n').length;
+            document.getElementById('charCount').textContent = data.length;
+        }
+
+        // Parse as specific format
+        function parseAs(format) {
+            if (! currentData) {
+                alert('Please upload a file first');
+                return;
+            }
+
+            currentFormat = format;
+            
+            // Update active button
+            document.querySelectorAll('.format-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event?. target?.classList. add('active');
+
+            const parsedDiv = document.getElementById('parsedData');
+
+            try {
+                switch(format) {
+                    case 'json':
+                        displayJSON(currentData, parsedDiv);
+                        break;
+                    case 'yaml':
+                        displayYAML(currentData, parsedDiv);
+                        break;
+                    case 'xml':
+                        displayXML(currentData, parsedDiv);
+                        break;
+                    case 'csv': 
+                        displayCSV(currentData, parsedDiv);
+                        break;
+                    case 'text':
+                        parsedDiv.innerHTML = '<pre>' + escapeHtml(currentData) + '</pre>';
+                        break;
+                }
+            } catch (error) {
+                parsedDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Parse Error</strong>
+                        <p>${error.message}</p>
+                        <p><small>Try selecting a different format</small></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display JSON
+        function displayJSON(data, container) {
+            const obj = JSON.parse(data);
+            container.innerHTML = '<div class="tree-view">' + renderTree(obj) + '</div>';
+        }
+
+        // Display YAML
+        function displayYAML(data, container) {
+            const obj = jsyaml.load(data);
+            container.innerHTML = '<div class="tree-view">' + renderTree(obj) + '</div>';
+        }
+
+        // Display XML
+        function displayXML(data, container) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data, "text/xml");
+            
+            // Check for parse errors
+            const parseError = xmlDoc.getElementsByTagName("parsererror");
+            if (parseError.length > 0) {
+                throw new Error('Invalid XML');
+            }
+
+            container.innerHTML = '<div class="tree-view">' + renderXMLTree(xmlDoc. documentElement) + '</div>';
+        }
+
+        // Display CSV
+        function displayCSV(data, container) {
+            const result = Papa.parse(data, { header: true });
+            
+            if (result.errors.length > 0) {
+                throw new Error(result.errors[0].message);
+            }
+
+            let html = '<table><thead><tr>';
+            
+            // Headers
+            const headers = Object.keys(result.data[0] || {});
+            headers.forEach(header => {
+                html += `<th>${escapeHtml(header)}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // Rows
+            result.data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${escapeHtml(row[header] || '')}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container. innerHTML = html;
+        }
+
+        // Render tree structure
+        function renderTree(obj, depth = 0) {
+            let html = '';
+            
+            if (Array.isArray(obj)) {
+                html += `<span class="tree-type">[Array:  ${obj.length} items]</span>`;
+                obj.forEach((item, index) => {
+                    html += '<div class="tree-item">';
+                    html += `<span class="tree-key">[${index}]</span>:  `;
+                    if (typeof item === 'object' && item !== null) {
+                        html += renderTree(item, depth + 1);
+                    } else {
+                        html += `<span class="tree-value">${escapeHtml(String(item))}</span>`;
+                    }
+                    html += '</div>';
+                });
+            } else if (typeof obj === 'object' && obj !== null) {
+                html += `<span class="tree-type">{Object:  ${Object.keys(obj).length} keys}</span>`;
+                for (const [key, value] of Object.entries(obj)) {
+                    html += '<div class="tree-item">';
+                    html += `<span class="tree-key">${escapeHtml(key)}</span>: `;
+                    if (typeof value === 'object' && value !== null) {
+                        html += renderTree(value, depth + 1);
+                    } else {
+                        html += `<span class="tree-value">${escapeHtml(String(value))}</span>`;
+                    }
+                    html += '</div>';
+                }
+            } else {
+                html += `<span class="tree-value">${escapeHtml(String(obj))}</span>`;
+            }
+            
+            return html;
+        }
+
+        // Render XML tree
+        function renderXMLTree(node) {
+            let html = `<span class="tree-key">&lt;${node.nodeName}&gt;</span>`;
+            
+            if (node.children.length > 0) {
+                for (const child of node.children) {
+                    html += '<div class="tree-item">' + renderXMLTree(child) + '</div>';
+                }
+            } else if (node.textContent.trim()) {
+                html += ` <span class="tree-value">${escapeHtml(node.textContent)}</span>`;
+            }
+            
+            return html;
+        }
+
+        // Utility functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+```
+
+## Quick Examples to Try
+
+### Example JSON (save as `test.json`)
+```json
+{
+  "name": "Floyd",
+  "age": 30,
+  "skills": ["Python", "JavaScript", "Git"],
+  "projects": [
+    {
+      "name": "Learning Hub",
+      "status": "active",
+      "technologies": ["HTML", "CSS", "JavaScript"]
+    }
+  ]
+}
+```
+
+### Example YAML (save as `test.yaml`)
+```yaml
+name: Floyd
+age: 30
+skills:
+  - Python
+  - JavaScript
+  - Git
+projects:
+  - name: Learning Hub
+    status: active
+    technologies: 
+      - HTML
+      - CSS
+      - JavaScript
+```
+
+### Example CSV (save as `test.csv`)
+```csv
+name,age,city,skill
+Floyd,30,Somewhere,Python
+Alice,25,Elsewhere,JavaScript
+Bob,35,Anywhere,Git
+```
+
+### Example XML (save as `test.xml`)
+```xml
+<?xml version="1.0"?>
+<person>
+  <name>Floyd</name>
+  <age>30</age>
+  <skills>
+    <skill>Python</skill>
+    <skill>JavaScript</skill>
+    <skill>Git</skill>
+  </skills>
+</person>
+```
+
+---
+**Notes Section**:
+- Drag & drop files to view
+- Auto-detects format from extension
+- Can force parse as different format
+- Shows file stats
+- 
+```

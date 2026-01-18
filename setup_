@@ -1,0 +1,48 @@
+#!/bin/bash
+# Quick setup script for learning-reference-hub
+
+echo "🚀 Setting up Learning Reference Hub..."
+
+# Check if git is installed
+if ! command -v git &> /dev/null; then
+    echo "❌ Git is not installed. Please install Git first."
+    exit 1
+fi
+
+# Initialize git if not already done
+if [ ! -d ".git" ]; then
+    echo "📦 Initializing Git repository..."
+    git init
+    git branch -M main
+fi
+
+# Add all files
+echo "📝 Adding files to Git..."
+git add . 
+
+# Create initial commit
+echo "💾 Creating initial commit..."
+git commit -m "Initial commit: Learning Reference Hub foundation (STRAP-0)
+
+- Added 16 comprehensive reference sheets
+- Created auto-indexing HTML system
+- Set up STRAP system for project continuity
+- Initialized Captain's Log
+- Ready for GitHub!"
+
+echo ""
+echo "✅ Local setup complete!"
+echo ""
+echo "📤 Next steps to push to GitHub:"
+echo "1. Create repo on GitHub:  learning-reference-hub"
+echo "2. Run these commands:"
+echo ""
+echo "   git remote add origin https://github.com/FloydNunGITHub/learning-reference-hub.git"
+echo "   git push -u origin main"
+echo ""
+echo "3. Enable GitHub Pages:"
+echo "   - Go to Settings → Pages"
+echo "   - Source: main branch"
+echo "   - Save"
+echo ""
+echo "🎉 Then your site will be live!"
