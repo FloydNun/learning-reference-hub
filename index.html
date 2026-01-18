@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git & GitHub Command Reference</title>
+    <title>📚 Learning Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
+        : root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --sidebar-bg: #2c3e50;
+            --content-bg: #ffffff;
+            --text:  #333;
+            --border: #e0e0e0;
+        }
+
         * {
             margin: 0;
-            padding: 0;
+            padding:  0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: var(--text);
             background:  #f5f5f5;
         }
-        
-        . container {
-            max-width:  1400px;
-            margin: 0 auto;
+
+        .container {
             display: flex;
             min-height: 100vh;
         }
-        
-        /* Sidebar Navigation */
+
+        /* SIDEBAR */
         .sidebar {
-            width: 280px;
-            background: #2c3e50;
+            width: 300px;
+            background: var(--sidebar-bg);
             color: white;
             padding: 20px;
             position: sticky;
@@ -36,240 +44,350 @@
             height: 100vh;
             overflow-y: auto;
         }
-        
-        .sidebar h1 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            color: #3498db;
+
+        .sidebar-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
         }
-        
-        .sidebar p {
+
+        .sidebar-header h1 {
+            font-size:  1.5em;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        . sidebar-header p {
             font-size: 0.9em;
-            margin-bottom: 20px;
             opacity: 0.8;
         }
-        
+
+        /* SEARCH BOX */
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        . search-box input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* NAVIGATION */
         .nav-list {
             list-style: none;
         }
-        
+
         .nav-list li {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        
-        .nav-list a {
-            color:  #ecf0f1;
+
+        . nav-list a {
+            color: #ecf0f1;
             text-decoration: none;
             display: block;
-            padding: 10px;
-            border-radius: 5px;
-            transition: background 0.3s;
+            padding: 10px 12px;
+            border-radius:  5px;
+            transition:  all 0.3s;
+            font-size: 0.95em;
         }
-        
-        .nav-list a:hover {
-            background:  #34495e;
+
+        . nav-list a:hover {
+            background: #34495e;
+            transform: translateX(5px);
         }
-        
+
         . nav-list a.active {
-            background: #3498db;
-            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            font-weight: 600;
         }
-        
-        /* Main Content */
+
+        /* CONTENT AREA */
         .content {
             flex: 1;
             padding: 40px;
-            background: white;
+            background: var(--content-bg);
             overflow-y: auto;
         }
-        
-        .markdown-body {
+
+        . markdown-body {
             max-width: 900px;
         }
-        
+
         .markdown-body h1 {
             color: #2c3e50;
-            border-bottom: 3px solid #3498db;
+            border-bottom: 3px solid var(--primary);
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin:  30px 0 20px;
         }
-        
+
         .markdown-body h2 {
             color: #34495e;
-            margin-top: 30px;
-            margin-bottom: 15px;
+            margin:  25px 0 15px;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary);
         }
-        
+
         .markdown-body h3 {
             color: #555;
-            margin-top: 20px;
-            margin-bottom:  10px;
+            margin: 20px 0 10px;
         }
-        
+
         .markdown-body pre {
-            background: #f4f4f4;
-            border-left: 4px solid #3498db;
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary);
             padding: 15px;
             overflow-x: auto;
             border-radius: 5px;
-            margin:  15px 0;
+            margin: 15px 0;
         }
-        
+
         .markdown-body code {
             background: #f4f4f4;
             padding: 2px 6px;
             border-radius:  3px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
+            color: #e83e8c;
         }
-        
+
         .markdown-body pre code {
             background: none;
             padding: 0;
+            color: inherit;
         }
-        
-        . markdown-body table {
+
+        .markdown-body table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
-        
+
         .markdown-body th,
         .markdown-body td {
-            border: 1px solid #ddd;
-            padding: 12px;
+            border: 1px solid var(--border);
+            padding:  12px;
             text-align:  left;
         }
-        
-        .markdown-body th {
-            background: #3498db;
+
+        . markdown-body th {
+            background: var(--primary);
             color: white;
+            font-weight: 600;
         }
-        
+
         .markdown-body tr:nth-child(even) {
             background: #f9f9f9;
         }
-        
+
+        .markdown-body blockquote {
+            border-left: 4px solid var(--secondary);
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        . markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        /* LOADING & ERROR */
         .loading {
             text-align: center;
             padding: 50px;
             color: #999;
         }
-        
-        .error {
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        . error {
             background: #ffe6e6;
-            border: 1px solid #ffcccc;
+            border: 2px solid #ffcccc;
             color: #cc0000;
             padding: 20px;
-            border-radius:  5px;
+            border-radius:  8px;
             margin: 20px 0;
         }
-        
-        /* Responsive */
+
+        /* THEME SWITCHER */
+        .theme-switcher {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .theme-switcher button {
+            width: 100%;
+            padding:  10px;
+            background:  rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .theme-switcher button:hover {
+            background:  rgba(255,255,255,0.2);
+        }
+
+        /* DARK THEME */
+        body.dark-theme {
+            --sidebar-bg: #1a1a1a;
+            --content-bg: #2d2d2d;
+            --text:  #e0e0e0;
+            --border: #444;
+        }
+
+        body.dark-theme .markdown-body pre {
+            background: #1a1a1a;
+        }
+
+        body.dark-theme .markdown-body code {
+            background: #1a1a1a;
+            color: #61dafb;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
             }
-            
+
             .sidebar {
                 width: 100%;
                 height: auto;
                 position: relative;
             }
-            
+
             .content {
                 padding: 20px;
             }
         }
     </style>
-    <!-- Using marked.js for markdown rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar Navigation -->
         <nav class="sidebar">
-            <h1>📚 Git Reference</h1>
-            <p>Command sheets for learning</p>
+            <div class="sidebar-header">
+                <h1>📚 Learning Hub</h1>
+                <p>Your personal reference library</p>
+            </div>
+
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 Search topics..."
+                    onkeyup="filterNav()"
+                >
+            </div>
+
             <ul class="nav-list" id="nav-list">
-                <li><a href="#" data-file="README.md">📖 Home / README</a></li>
-                <!-- Navigation will be auto-populated -->
+                <!-- Populated by JavaScript -->
             </ul>
+
+            <div class="theme-switcher">
+                <button onclick="toggleTheme()">🌓 Toggle Dark Mode</button>
+            </div>
         </nav>
-        
-        <!-- Main Content Area -->
+
         <main class="content">
             <div id="markdown-content" class="markdown-body">
-                <div class="loading">Loading...</div>
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading... </p>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        // Configuration:  Add your markdown files here
+        // 📁 ADD YOUR FILES HERE! 
         const markdownFiles = [
             { name: 'README.md', title: '📖 Home / README' },
+            { name: 'COPILOT-CHAT-STRAP-0.md', title: '🎯 STRAP-0: Return Point' },
+            { name:  'captains-log.md', title: '📓 Captain\'s Log' },
             { name: '01-git-basics.md', title: '1️⃣ Git Basics' },
             { name: '02-git-branches.md', title: '2️⃣ Git Branches' },
             { name: '03-github-web-guide.md', title: '3️⃣ GitHub Web Guide' },
-            { name:  '04-troubleshooting. md', title: '🆘 Troubleshooting' },
-            { name: '05-command-line-basics.md', title: '💻 Command Line Basics' }
-            // ADD NEW FILES HERE AS YOU CREATE THEM! 
-            // { name: '06-python-basics.md', title: '🐍 Python Basics' },
+            { name: '04-troubleshooting.md', title: '🆘 Troubleshooting' },
+            { name: '05-command-line-basics.md', title: '💻 Command Line Basics' },
+            { name: '06-windows-essentials.md', title: '🪟 Windows 10/11' },
+            { name: '07-linux-essentials.md', title: '🐧 Linux Essentials' },
+            { name:  '08-android-basics.md', title: '📱 Android & ADB' },
+            { name:  '09-raspberry-pi-arm.md', title: '🥧 Raspberry Pi & ARM' },
+            { name: '10-web-dev-essentials.md', title: '🌐 JS/TS/CSS' },
+            { name: '11-react-template.md', title: '⚛️ React Template' },
+            { name: '12-flask-cliff-notes.md', title: '🐍 Flask Cliff Notes' },
+            { name: '13-html-templates.md', title: '📄 HTML Wrappers' },
+            { name: '14-auto-indexer-generator.md', title: '🔄 Auto-Indexer' },
+            { name: '15-data-formats.md', title: '💾 Data Formats' },
+            { name: '16-data-viewer.md', title: '🔍 Data Viewer' }
         ];
 
         const navList = document.getElementById('nav-list');
         const contentDiv = document.getElementById('markdown-content');
-        
-        // Build navigation automatically
+
+        // Build navigation
         function buildNavigation() {
             navList.innerHTML = '';
             markdownFiles.forEach((file, index) => {
                 const li = document.createElement('li');
-                const a = document. createElement('a');
-                a. href = '#';
+                const a = document.createElement('a');
+                a.href = '#';
                 a.textContent = file.title;
                 a.dataset.file = file.name;
-                
-                // Load first file by default
-                if (index === 0) {
-                    a.classList.add('active');
-                }
-                
+
+                if (index === 0) a.classList.add('active');
+
                 a.addEventListener('click', (e) => {
                     e.preventDefault();
                     loadMarkdown(file.name);
-                    
-                    // Update active state
                     document.querySelectorAll('. nav-list a').forEach(link => {
                         link.classList.remove('active');
                     });
-                    a.classList. add('active');
+                    a.classList.add('active');
                 });
-                
+
                 li.appendChild(a);
                 navList.appendChild(li);
             });
         }
-        
-        // Load and render markdown file
+
+        // Load markdown file
         async function loadMarkdown(filename) {
-            contentDiv.innerHTML = '<div class="loading">Loading ' + filename + '...</div>';
-            
+            contentDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+
             try {
                 const response = await fetch(filename);
-                
-                if (!response.ok) {
-                    throw new Error('File not found:  ' + filename);
-                }
-                
+                if (!response.ok) throw new Error('File not found:  ' + filename);
+
                 const text = await response.text();
                 const html = marked.parse(text);
                 contentDiv.innerHTML = html;
-                
-                // Scroll to top
                 window.scrollTo(0, 0);
-                
             } catch (error) {
                 contentDiv.innerHTML = `
                     <div class="error">
@@ -281,7 +399,31 @@
                 `;
             }
         }
-        
+
+        // Search/filter
+        function filterNav() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const links = document.querySelectorAll('. nav-list a');
+
+            links.forEach(link => {
+                const text = link.textContent. toLowerCase();
+                const listItem = link.parentElement;
+                listItem.style.display = text. includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList. contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+
         // Initialize
         buildNavigation();
         loadMarkdown('README.md');
