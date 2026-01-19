@@ -17,10 +17,10 @@ git config --list
 ### Option A: Clone an existing repository
 ```bash
 # Copy a repository from GitHub to your computer
-git clone https://github.com/username/repository-name.git
+git clone https://github.com/floydnun/learning-referance-hub
 
 # Move into the repository folder
-cd repository-name
+cd learning-referance-hub
 ```
 
 ### Option B: Create a new repository
