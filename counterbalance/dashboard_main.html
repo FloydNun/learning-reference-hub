@@ -1,0 +1,545 @@
+<! DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛸 COUNTERBALANCE Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        /* Header */
+        . header {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .nav a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        . nav a.active {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            color: #333;
+            transition:  all 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card-icon {
+            font-size: 2.5em;
+        }
+        
+        .card-title {
+            font-size:  1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .card-content {
+            font-size: 1.1em;
+        }
+        
+        .stat-number {
+            font-size: 3em;
+            font-weight: 700;
+            color: #667eea;
+            margin:  10px 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        /* Module List */
+        .module-list {
+            list-style: none;
+        }
+        
+        .module-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .module-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .module-files {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        /* Search */
+        .search-box {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size:  1.1em;
+            outline: none;
+        }
+        
+        .search-results {
+            margin-top: 20px;
+        }
+        
+        .search-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-file {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        . result-preview {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        /* Custom Dashboards */
+        .dashboards-grid {
+            display:  grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .dashboard-card {
+            background: rgba(255,255,255,0.95);
+            border-radius:  12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #333;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard-icon {
+            font-size: 3em;
+            margin-bottom:  15px;
+        }
+        
+        .dashboard-title {
+            font-weight: 600;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛸 COUNTERBALANCE</h1>
+        <p>Your Self-Healing Learning Workspace</p>
+    </div>
+    
+    <div class="nav">
+        <a href="#overview" class="active" onclick="showSection('overview')">📊 Overview</a>
+        <a href="#modules" onclick="showSection('modules')">📦 Modules</a>
+        <a href="#search" onclick="showSection('search')">🔍 Search</a>
+        <a href="#custom" onclick="showSection('custom')">🎨 Custom Dashboards</a>
+        <a href="#logs" onclick="showSection('logs')">📋 Logs</a>
+    </div>
+    
+    <div class="container">
+        <!-- Overview Section -->
+        <div id="overview-section" class="section">
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📥</div>
+                        <div class="card-title">INBOX</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="stat-number" id="inbox-count">-</div>
+                        <div class="stat-label">Files waiting</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📦</div>
+                        <div class="card-title">Modules</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="stat-number" id="modules-count">-</div>
+                        <div class="stat-label">Active modules</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📁</div>
+                        <div class="card-title">Total Files</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="stat-number" id="total-files">-</div>
+                        <div class="stat-label">Across system</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">✅</div>
+                        <div class="card-title">Status</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="stat-number" style="font-size: 2em;" id="system-status">🟢</div>
+                        <div class="stat-label">Operational</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-title">Quick Actions</div>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <a href="MODULES/CODE_PLAYGROUND/playground.html" style="padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">🎮 Playground</a>
+                        <a href="MODULES/HTML_SHOWCASE/showcase_indexer.html" style="padding: 10px 20px; background:  #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">🎨 Showcase</a>
+                        <a href="utilities/ocr_editor.html" style="padding: 10px 20px; background:  #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">📄 OCR Editor</a>
+                        <a href="https://floydnun.github.io/learning-reference-hub/" target="_blank" style="padding: 10px 20px; background:  #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">📚 Reference Hub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modules Section -->
+        <div id="modules-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📦</div>
+                    <div class="card-title">Active Modules</div>
+                </div>
+                <div class="card-content">
+                    <ul class="module-list" id="module-list">
+                        <li class="loading">
+                            <div class="spinner"></div>
+                            Loading modules...
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Section -->
+        <div id="search-section" class="section" style="display: none;">
+            <div class="search-box">
+                <h2 style="margin-bottom: 20px; color: #333;">🔍 Search OCR Content</h2>
+                <input type="text" id="search-input" placeholder="Search across all OCR'd documents..." onkeyup="handleSearch(event)">
+                <div class="search-results" id="search-results"></div>
+            </div>
+        </div>
+        
+        <!-- Custom Dashboards Section -->
+        <div id="custom-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🎨</div>
+                    <div class="card-title">Custom Dashboards</div>
+                </div>
+                <div class="card-content">
+                    <p style="margin-bottom: 20px; color: #666;">Drop custom HTML dashboards in DASHBOARDS/ - they auto-appear here!</p>
+                    <div class="dashboards-grid" id="custom-dashboards">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading custom dashboards...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logs Section -->
+        <div id="logs-section" class="section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">System Logs</div>
+                </div>
+                <div class="card-content">
+                    <p style="color: #666;">View logs at:  <code>System_Logs/</code></p>
+                    <ul style="margin-top: 20px; list-style: none;">
+                        <li style="padding: 10px; background: #f8f9fa; margin-bottom: 10px; border-radius: 8px;">
+                            <a href="System_Logs/console.log" style="color: #667eea; text-decoration:  none; font-weight: 600;">📋 Console Log</a>
+                        </li>
+                        <li style="padding: 10px; background: #f8f9fa; margin-bottom: 10px; border-radius: 8px;">
+                            <a href="System_Logs/error. log" style="color: #667eea; text-decoration: none; font-weight: 600;">❌ Error Log</a>
+                        </li>
+                        <li style="padding: 10px; background: #f8f9fa; margin-bottom: 10px; border-radius: 8px;">
+                            <a href="System_Logs/header.log" style="color: #667eea; text-decoration:  none; font-weight: 600;">🔷 Header Log</a>
+                        </li>
+                        <li style="padding: 10px; background: #f8f9fa; margin-bottom: 10px; border-radius: 8px;">
+                            <a href="System_Logs/footer.log" style="color: #667eea; text-decoration:  none; font-weight: 600;">🔶 Footer Log</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            
+            // Show selected section
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            // Update nav
+            document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Load data for section
+            if (section === 'modules') loadModules();
+            if (section === 'custom') loadCustomDashboards();
+        }
+        
+        // Load system status
+        async function loadStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                document.getElementById('inbox-count').textContent = data. inbox_count;
+                document.getElementById('modules-count').textContent = data.modules;
+                document.getElementById('total-files').textContent = data.total_files;
+            } catch (error) {
+                console.error('Failed to load status:', error);
+            }
+        }
+        
+        // Load modules
+        async function loadModules() {
+            const list = document.getElementById('module-list');
+            list.innerHTML = '<li class="loading"><div class="spinner"></div>Loading... </li>';
+            
+            try {
+                const response = await fetch('/api/modules');
+                const data = await response.json();
+                
+                if (data.modules.length === 0) {
+                    list. innerHTML = '<li style="text-align: center; color: #666;">No modules found</li>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                data.modules.forEach(module => {
+                    const li = document.createElement('li');
+                    li.className = 'module-item';
+                    li.innerHTML = `
+                        <span class="module-name">${module.name}</span>
+                        <span class="module-files">${module.files} files</span>
+                    `;
+                    list.appendChild(li);
+                });
+            } catch (error) {
+                list.innerHTML = '<li style="color: #dc3545;">Failed to load modules</li>';
+            }
+        }
+        
+        // Search
+        let searchTimeout;
+        function handleSearch(event) {
+            clearTimeout(searchTimeout);
+            const query = event.target.value.trim();
+            
+            if (query. length < 3) {
+                document.getElementById('search-results').innerHTML = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => performSearch(query), 500);
+        }
+        
+        async function performSearch(query) {
+            const results = document.getElementById('search-results');
+            results.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+            
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.results.length === 0) {
+                    results.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No results found</p>';
+                    return;
+                }
+                
+                results.innerHTML = '';
+                data. results.forEach(result => {
+                    const div = document.createElement('div');
+                    div. className = 'search-result';
+                    div.innerHTML = `
+                        <div class="result-file">${result.file}</div>
+                        <div class="result-preview">${result.preview}</div>
+                    `;
+                    results.appendChild(div);
+                });
+            } catch (error) {
+                results.innerHTML = '<p style="color: #dc3545;">Search failed</p>';
+            }
+        }
+        
+        // Load custom dashboards
+        async function loadCustomDashboards() {
+            const container = document.getElementById('custom-dashboards');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading... </div>';
+            
+            try {
+                const response = await fetch('/api/dashboards');
+                const data = await response.json();
+                
+                if (data.dashboards.length === 0) {
+                    container.innerHTML = '<p style="color: #666; text-align: center;">No custom dashboards yet.  Drop HTML files in DASHBOARDS/</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                data. dashboards.forEach(dashboard => {
+                    const card = document.createElement('a');
+                    card.className = 'dashboard-card';
+                    card.href = dashboard. path;
+                    card.innerHTML = `
+                        <div class="dashboard-icon">📊</div>
+                        <div class="dashboard-title">${dashboard.title}</div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = '<p style="color: #dc3545;">Failed to load dashboards</p>';
+            }
+        }
+        
+        // Initialize
+        loadStatus();
+        setInterval(loadStatus, 30000); // Refresh every 30 seconds
+    </script>
+</body>
+</html>

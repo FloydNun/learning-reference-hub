@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""
+🛸 COUNTERBALANCE - Root Processor
+Prepares files for module integration
+- Validates structure
+- Adds Header/Footer/Globals imports if missing
+- Runs auto_function_doc. py to document functions
+- Creates backup before modifications
+- Routes to appropriate MODULE
+"""
+
+import sys
+import os
+from pathlib import Path
+from datetime import datetime
+import shutil
+import re
+
+# Import standard includes
+from Import_Header_Include import log_header, get_runtime, DEBUG
+from Import_Footer_Include import log_footer, close_out
+from Import_Globals_Include import *
+
+
+class RootProcessor:
+    """Main processor for preparing files before module integration"""
+    
+    def __init__(self):
+        self.script_name = "Root_Processor. py"
+        log_header(self.script_name, "Root Processor initialized")
+        
+    def log_console(self, message: str):
+        """Log to console. log"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"[{timestamp}] [CONSOLE] [{self.script_name}] {message}\n"
+        
+        log_file = LOGS_DIR / "console.log"
+        with open(log_file, 'a') as f:
+            f. write(log_entry)
+        
+        if DEBUG:
+            print(f"📋 CONSOLE: {message}")
+    
+    def log_error(self, message: str):
+        """Log to error.log"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"[{timestamp}] [ERROR] [{self.script_name}] {message}\n"
+        
+        log_file = LOGS_DIR / "error.log"
+        with open(log_file, 'a') as f:
+            f.write(log_entry)
+        
+        print(f"❌ ERROR:  {message}")
+    
+    def check_imports(self, file_path: Path) -> dict:
+        """Check if file has required imports"""
+        self.log_console(f"Checking imports in:  {file_path. name}")
+        
+        if not file_path.suffix == '. py':
+            return {'header': True, 'footer': True, 'globals': True}  # Not Python, skip
+        
+        try: 
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            has_header = 'Import_Header_Include' in content
+            has_footer = 'Import_Footer_Include' in content
+            has_globals = 'Import_Globals_Include' in content
+            
+            return {
+                'header': has_header,
+                'footer': has_footer,
+                'globals':  has_globals,
+                'content': content
+            }
+        except Exception as e: 
+            self.log_error(f"Failed to read {file_path.name}: {e}")
+            return None
+    
+    def create_backup(self, file_path: Path) -> Path:
+        """Create backup copy before modification"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_name = f"{file_path.stem}_backup_{timestamp}{file_path.suffix}"
+        backup_path = file_path.parent / backup_name
+        
+        try:
+            shutil.copy2(file_path, backup_path)
+            self.log_console(f"Backup created: {backup_name}")
+            return backup_path
+        except Exception as e:
+            self.log_error(f"Failed to create backup: {e}")
+            return None
+    
+    def refactor_imports(self, file_path: Path, check_result: dict) -> bool:
+        """Add missing imports to file"""
+        self.log_console(f"Refactoring imports for: {file_path.name}")
+        
+        # Create backup first
+        backup = self.create_backup(file_path)
+        if not backup: 
+            self.log_error("Cannot refactor without backup")
+            return False
+        
+        content = check_result['content']
+        lines = content.split('\n')
+        
+        # Find docstring end or first import
+        insert_pos = 0
+        in_docstring = False
+        docstring_char = None
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            # Detect docstring start
+            if not in_docstring and (stripped.startswith('"""') or stripped.startswith("'''")):
+                docstring_char = '"""' if '"""' in stripped else "'''"
+                in_docstring = True
+                if stripped.count(docstring_char) >= 2:  # Single line docstring
+                    in_docstring = False
+                    insert_pos = i + 1
+                continue
+            
+            # Detect docstring end
+            if in_docstring and docstring_char in stripped:
+                in_docstring = False
+                insert_pos = i + 1
+                continue
+            
+            # Find first import or code
+            if not in_docstring and stripped and not stripped.startswith('#'):
+                if stripped.startswith('import ') or stripped.startswith('from '):
+                    insert_pos = i
+                else:
+                    insert_pos = i
+                break
+        
+        # Build import block
+        import_block = []
+        if not check_result['header']:
+            import_block.append("from Import_Header_Include import log_header, get_runtime, DEBUG")
+        if not check_result['footer']:
+            import_block.append("from Import_Footer_Include import log_footer, close_out")
+        if not check_result['globals']:
+            import_block. append("from Import_Globals_Include import *")
+        
+        if import_block:
+            import_block.append("")  # Blank line after imports
+        
+        # Insert imports
+        new_lines = lines[:insert_pos] + import_block + lines[insert_pos:]
+        new_content = '\n'.join(new_lines)
+        
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            self.log_console(f"Imports added to: {file_path.name}")
+            return True
+        except Exception as e:
+            self. log_error(f"Failed to write refactored file: {e}")
+            return False
+    
+    def document_functions(self, file_path: Path) -> bool:
+        """Run auto_function_doc.py to document functions"""
+        self.log_console(f"Documenting functions in: {file_path. name}")
+        
+        # TODO: Call auto_function_doc.py when implemented
+        # For now, just log that it would happen
+        self.log_console("Function documentation:  [PLACEHOLDER - auto_function_doc.py not yet implemented]")
+        return True
+    
+    def determine_destination(self, file_path: Path) -> Path:
+        """Determine which MODULE this file should go to"""
+        filename = file_path.name. lower()
+        
+        # Detection rules based on naming/content
+        if 'chat' in filename or filename.endswith('.md'):
+            return MODULES_DIR / "CHATS"
+        elif 'snippet' in filename or filename.endswith('.js'):
+            return MODULES_DIR / "SNIPPETS"
+        elif 'playground' in filename or 'test' in filename: 
+            return MODULES_DIR / "CODE_PLAYGROUND"
+        elif filename.endswith('.ipynb'):
+            return MODULES_DIR / "NOTEBOOKS"
+        else:
+            # Default to CODE_REFINERY for analysis
+            return ROOT_DIR / "CODE_REFINERY"
+    
+    def process_file(self, file_path: Path) -> bool:
+        """Main processing pipeline for a file"""
+        self.log_console(f"Processing file: {file_path.name}")
+        
+        # Check imports
+        check_result = self.check_imports(file_path)
+        if not check_result: 
+            self.log_error(f"Failed to check imports for:  {file_path.name}")
+            return False
+        
+        # Refactor if needed
+        needs_refactor = not all([check_result['header'], check_result['footer'], check_result['globals']])
+        
+        if needs_refactor and file_path.suffix == '.py': 
+            if not self.refactor_imports(file_path, check_result):
+                self.log_error(f"Failed to refactor:  {file_path.name}")
+                return False
+        
+        # Document functions
+        if file_path.suffix == '.py': 
+            self.document_functions(file_path)
+        
+        # Determine destination
+        destination = self.determine_destination(file_path)
+        self.log_console(f"Destination determined: {destination.name}")
+        
+        # Move file to destination
+        try:
+            destination.mkdir(parents=True, exist_ok=True)
+            dest_path = destination / file_path.name
+            shutil.move(str(file_path), str(dest_path))
+            self.log_console(f"File moved to: {destination.name}/{file_path.name}")
+            return True
+        except Exception as e:
+            self.log_error(f"Failed to move file: {e}")
+            return False
+    
+    def process_inbox(self):
+        """Process all files in INBOX"""
+        self.log_console("Scanning INBOX for files")
+        
+        inbox_files = [f for f in INBOX_DIR.iterdir() if f.is_file() and f.name != 'README.md']
+        
+        if not inbox_files:
+            self.log_console("INBOX is empty")
+            return
+        
+        self.log_console(f"Found {len(inbox_files)} file(s) to process")
+        
+        for file_path in inbox_files: 
+            self.log_console(f"--- Processing: {file_path.name} ---")
+            success = self.process_file(file_path)
+            if success:
+                self.log_console(f"✅ Successfully processed: {file_path.name}")
+            else:
+                self.log_error(f"❌ Failed to process: {file_path.name}")
+        
+        self.log_console("INBOX processing complete")
+
+
+def main():
+    """Main entry point"""
+    processor = RootProcessor()
+    
+    try:
+        processor.process_inbox()
+        close_out("Root_Processor.py", "SUCCESS")
+    except Exception as e: 
+        processor.log_error(f"Fatal error: {e}")
+        close_out("Root_Processor. py", "FAILURE")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

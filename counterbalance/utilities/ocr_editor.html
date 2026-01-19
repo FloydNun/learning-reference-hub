@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📄 OCR Editor - COUNTERBALANCE</title>
+    
+    <!-- Monaco Editor (only external dependency) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:  #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: #2d2d30;
+            padding: 15px 20px;
+            border-bottom: 2px solid #007acc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            color: #007acc;
+        }
+        
+        .file-info {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+        
+        . controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #005a9e;
+            transform: translateY(-2px);
+        }
+        
+        . btn. danger {
+            background: #d73a49;
+        }
+        
+        .btn.danger:hover {
+            background: #b92534;
+        }
+        
+        .btn.success {
+            background: #28a745;
+        }
+        
+        .btn.success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn.secondary {
+            background: #6c757d;
+        }
+        
+        .btn. secondary:hover {
+            background:  #545b62;
+        }
+        
+        /* View mode toggle */
+        .view-toggle {
+            background: #252526;
+            padding: 10px 20px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-toggle button {
+            padding: 6px 12px;
+            background: #3e3e42;
+            color: #d4d4d4;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        . view-toggle button. active {
+            background: #007acc;
+            color: white;
+        }
+        
+        /* Main container */
+        .container {
+            display: flex;
+            height:  calc(100vh - 120px);
+        }
+        
+        /* Three pane view */
+        .pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #007acc;
+        }
+        
+        .pane:last-child {
+            border-right: none;
+        }
+        
+        .pane.hidden {
+            display: none;
+        }
+        
+        . pane-header {
+            background: #252526;
+            padding: 10px 15px;
+            border-bottom:  1px solid #3e3e42;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pane-header. original {
+            color: #4ec9b0;
+        }
+        
+        .pane-header.ocr {
+            color: #ffd700;
+        }
+        
+        .pane-header. edited {
+            color: #f48771;
+        }
+        
+        .pane-content {
+            flex: 1;
+            overflow:  auto;
+            position: relative;
+        }
+        
+        /* Image display */
+        .image-viewer {
+            width: 100%;
+            height:  100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1e1e1e;
+            overflow: auto;
+        }
+        
+        .image-viewer img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        . pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Monaco editor wrapper */
+        .editor-wrapper {
+            width: 100%;
+            height:  100%;
+        }
+        
+        /* Diff view */
+        .diff-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        
+        .diff-line {
+            padding: 4px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre;
+        }
+        
+        .diff-line. added {
+            background: rgba(40, 167, 69, 0.2);
+            border-left: 3px solid #28a745;
+        }
+        
+        .diff-line.removed {
+            background: rgba(215, 58, 73, 0.2);
+            border-left: 3px solid #d73a49;
+        }
+        
+        .diff-line. unchanged {
+            color: #a0a0a0;
+        }
+        
+        /* Status bar */
+        .status-bar {
+            background: #007acc;
+            padding: 8px 20px;
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* File upload area */
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            border: 3px dashed #007acc;
+            border-radius: 10px;
+            margin:  20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: rgba(0, 122, 204, 0.1);
+            border-color: #00d4ff;
+        }
+        
+        .upload-area.dragover {
+            background: rgba(0, 122, 204, 0.2);
+            border-color: #00d4ff;
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.2em;
+            color: #d4d4d4;
+        }
+        
+        .upload-hint {
+            margin-top: 10px;
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+        
+        /* Hidden file input */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 OCR Editor</h1>
+        <div class="file-info" id="fileInfo">No file loaded</div>
+        <div class="controls">
+            <label for="fileInput" class="btn">📁 Open File</label>
+            <button class="btn success" onclick="saveEdited()" id="saveBtn" disabled>💾 Save Edited</button>
+            <button class="btn secondary" onclick="exportDiff()" id="diffBtn" disabled>📊 Export Diff</button>
+            <button class="btn danger" onclick="resetEditor()">🔄 Reset</button>
+        </div>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/*,. pdf" onchange="handleFileSelect(event)">
+    
+    <div class="view-toggle">
+        <button class="active" onclick="setViewMode('three')">Three Pane View</button>
+        <button onclick="setViewMode('two')">Two Pane (Original + Edited)</button>
+        <button onclick="setViewMode('diff')">Diff View</button>
+    </div>
+    
+    <div class="container" id="mainContainer">
+        <!-- Initial upload area -->
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">Drop image or PDF here</div>
+            <div class="upload-hint">or click to browse</div>
+        </div>
+        
+        <!-- Pane 1: Original (Image/PDF) -->
+        <div class="pane hidden" id="originalPane">
+            <div class="pane-header original">
+                📷 ORIGINAL
+                <span id="originalSize"></span>
+            </div>
+            <div class="pane-content">
+                <div class="image-viewer" id="imageViewer"></div>
+            </div>
+        </div>
+        
+        <!-- Pane 2: OCR Text (Read-only) -->
+        <div class="pane hidden" id="ocrPane">
+            <div class="pane-header ocr">
+                🔍 OCR RESULT (Read-only)
+                <span id="ocrCharCount"></span>
+            </div>
+            <div class="pane-content">
+                <div class="editor-wrapper" id="ocrEditor"></div>
+            </div>
+        </div>
+        
+        <!-- Pane 3: Edited Text -->
+        <div class="pane hidden" id="editedPane">
+            <div class="pane-header edited">
+                ✏️ EDITED (Your changes)
+                <span id="editedStatus">Unchanged</span>
+            </div>
+            <div class="pane-content">
+                <div class="editor-wrapper" id="editedEditor"></div>
+            </div>
+        </div>
+        
+        <!-- Diff View (hidden by default) -->
+        <div class="pane hidden" id="diffPane" style="flex: 2;">
+            <div class="pane-header">
+                📊 DIFF VIEW (OCR → Edited)
+            </div>
+            <div class="pane-content">
+                <div class="diff-container" id="diffContainer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-item">
+            <span id="statusMessage">Ready - Load a file to begin</span>
+        </div>
+        <div class="status-item">
+            <span id="viewMode">Three Pane View</span>
+            <span>|</span>
+            <span id="fileType">-</span>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let currentFile = null;
+        let ocrEditor, editedEditor;
+        let ocrText = '';
+        let editedText = '';
+        let viewMode = 'three';
+        
+        // Monaco Editor setup
+        require. config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            // OCR Editor (read-only)
+            ocrEditor = monaco.editor.create(document.getElementById('ocrEditor'), {
+                value: 'OCR text will appear here.. .',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                readOnly: true,
+                minimap: { enabled:  false },
+                fontSize: 14,
+                wordWrap: 'on',
+                lineNumbers: 'on'
+            });
+            
+            // Edited Editor
+            editedEditor = monaco.editor.create(document.getElementById('editedEditor'), {
+                value:  'Edit OCR text here...',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                minimap: { enabled: true },
+                fontSize: 14,
+                wordWrap: 'on',
+                lineNumbers: 'on'
+            });
+            
+            // Track changes
+            editedEditor.onDidChangeModelContent(() => {
+                editedText = editedEditor.getValue();
+                updateEditedStatus();
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                ocrEditor.layout();
+                editedEditor.layout();
+            });
+        });
+        
+        // Drag and drop
+        const uploadArea = document.getElementById('uploadArea');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover']. forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('dragover');
+            }, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('dragover');
+            }, false);
+        });
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        // File handling
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+        
+        function handleFile(file) {
+            currentFile = file;
+            
+            // Update UI
+            document.getElementById('fileInfo').textContent = file.name;
+            document.getElementById('fileType').textContent = file.type;
+            document.getElementById('originalSize').textContent = formatFileSize(file.size);
+            
+            // Hide upload area
+            document.getElementById('uploadArea').classList.add('hidden');
+            
+            // Show panes
+            document.getElementById('originalPane').classList.remove('hidden');
+            document.getElementById('ocrPane').classList.remove('hidden');
+            document.getElementById('editedPane').classList.remove('hidden');
+            
+            // Display original
+            displayOriginal(file);
+            
+            // Simulate OCR (in real implementation, this would call Python OCR script)
+            simulateOCR(file);
+            
+            // Enable buttons
+            document.getElementById('saveBtn').disabled = false;
+            document.getElementById('diffBtn').disabled = false;
+            
+            updateStatus('File loaded:  ' + file.name);
+        }
+        
+        function displayOriginal(file) {
+            const viewer = document.getElementById('imageViewer');
+            viewer.innerHTML = '';
+            
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                viewer.appendChild(img);
+            } else if (file.type === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = URL.createObjectURL(file);
+                iframe.className = 'pdf-viewer';
+                viewer.appendChild(iframe);
+            }
+        }
+        
+        function simulateOCR(file) {
+            updateStatus('Performing OCR...');
+            
+            // Simulate OCR delay
+            setTimeout(() => {
+                // In real implementation, this would call: 
+                // fetch('/api/ocr', { method: 'POST', body: formData })
+                
+                ocrText = `# OCR Result from:  ${file.name}
+# Processed:  ${new Date().toISOString()}
+
+This is simulated OCR text. 
+In the real implementation, this would be extracted text from the image or PDF.
+
+You can edit this text in the right pane.
+Changes will be tracked and you can export a diff. 
+
+Example content:
+- Line 1 of extracted text
+- Line 2 of extracted text
+- Line 3 of extracted text
+
+The original image/PDF is preserved and never altered.`;
+                
+                ocrEditor.setValue(ocrText);
+                editedEditor.setValue(ocrText);
+                editedText = ocrText;
+                
+                document.getElementById('ocrCharCount').textContent = `${ocrText.length} chars`;
+                
+                updateStatus('OCR complete - ready for editing');
+            }, 1000);
+        }
+        
+        // View modes
+        function setViewMode(mode) {
+            viewMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const originalPane = document.getElementById('originalPane');
+            const ocrPane = document.getElementById('ocrPane');
+            const editedPane = document.getElementById('editedPane');
+            const diffPane = document.getElementById('diffPane');
+            
+            // Reset
+            [originalPane, ocrPane, editedPane, diffPane].forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            
+            if (mode === 'three') {
+                originalPane.classList.remove('hidden');
+                ocrPane.classList. remove('hidden');
+                editedPane.classList.remove('hidden');
+                document.getElementById('viewMode').textContent = 'Three Pane View';
+            } else if (mode === 'two') {
+                originalPane.classList.remove('hidden');
+                editedPane.classList.remove('hidden');
+                document.getElementById('viewMode').textContent = 'Two Pane View';
+            } else if (mode === 'diff') {
+                diffPane.classList.remove('hidden');
+                generateDiff();
+                document.getElementById('viewMode').textContent = 'Diff View';
+            }
+            
+            // Relayout editors
+            setTimeout(() => {
+                if (ocrEditor) ocrEditor.layout();
+                if (editedEditor) editedEditor.layout();
+            }, 100);
+        }
+        
+        // Diff generation
+        function generateDiff() {
+            const diffContainer = document.getElementById('diffContainer');
+            diffContainer.innerHTML = '';
+            
+            const ocrLines = ocrText.split('\n');
+            const editedLines = editedText.split('\n');
+            
+            // Simple line-by-line diff
+            const maxLines = Math.max(ocrLines.length, editedLines. length);
+            
+            for (let i = 0; i < maxLines; i++) {
+                const ocrLine = ocrLines[i] || '';
+                const editedLine = editedLines[i] || '';
+                
+                if (ocrLine === editedLine) {
+                    // Unchanged
+                    const div = document.createElement('div');
+                    div.className = 'diff-line unchanged';
+                    div.textContent = `  ${ocrLine}`;
+                    diffContainer.appendChild(div);
+                } else {
+                    // Changed
+                    if (ocrLine) {
+                        const removed = document.createElement('div');
+                        removed.className = 'diff-line removed';
+                        removed. textContent = `- ${ocrLine}`;
+                        diffContainer.appendChild(removed);
+                    }
+                    if (editedLine) {
+                        const added = document.createElement('div');
+                        added.className = 'diff-line added';
+                        added.textContent = `+ ${editedLine}`;
+                        diffContainer.appendChild(added);
+                    }
+                }
+            }
+        }
+        
+        // Save edited text
+        function saveEdited() {
+            const edited = editedEditor.getValue();
+            
+            // Create download
+            const blob = new Blob([edited], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document. createElement('a');
+            a.href = url;
+            a. download = currentFile.name. replace(/\.[^. ]+$/, '_edited.txt');
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            updateStatus('Saved edited text');
+        }
+        
+        // Export diff
+        function exportDiff() {
+            generateDiff();
+            
+            const diffContainer = document.getElementById('diffContainer');
+            const diffText = diffContainer.innerText;
+            
+            const blob = new Blob([diffText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFile.name.replace(/\.[^.]+$/, '_diff.txt');
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            updateStatus('Exported diff');
+        }
+        
+        // Reset
+        function resetEditor() {
+            if (confirm('Reset all changes?')) {
+                editedEditor.setValue(ocrText);
+                updateStatus('Reset to OCR text');
+            }
+        }
+        
+        // Helpers
+        function updateEditedStatus() {
+            const status = document.getElementById('editedStatus');
+            if (editedText === ocrText) {
+                status.textContent = 'Unchanged';
+                status.style.color = '#a0a0a0';
+            } else {
+                status.textContent = 'Modified';
+                status.style.color = '#ffd700';
+            }
+        }
+        
+        function updateStatus(message) {
+            document. getElementById('statusMessage').textContent = message;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+    </script>
+</body>
+</html>
